@@ -159,9 +159,10 @@ ul.steps2 li{margin:6px 0}
 #setup .sheet h2{margin:0 0 6px}
 .fieldlabel{display:block;font-weight:600;font-size:.92rem;margin:16px 0 6px}
 #setup select,#setup input[type=number]{width:100%}
-.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .choice{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-weight:600;cursor:pointer}
-.choice input{width:20px;height:20px;min-height:0;accent-color:var(--accent)}
+.choice{min-width:0;overflow-wrap:anywhere}
+.choice input{width:20px;height:20px;min-height:0;flex:none;accent-color:var(--accent)}
 .choice:has(input:checked){border-color:var(--accent);background:var(--line-s)}
 @media(min-width:760px){#setup{align-items:center}#setup .sheet{border-radius:12px}}
 
@@ -788,6 +789,7 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
       <button id="gcSync">Add shifts to this calendar</button>
       <button id="gcRefresh" class="sec">Reload calendar events for clash checks</button>
       <button id="wcMake" class="sec" hidden>Create a “Work roster” calendar</button>
+      <button id="gcTidy" class="sec" hidden>Remove old roster events from other calendars</button>
       <button id="gcOut" class="sec">Disconnect</button>
     </div>
   </div>
@@ -802,6 +804,7 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
     <div class="set"><label for="msTarget">Add my shifts to</label><select id="msTarget" style="grid-column:2"></select></div>
     <div class="stack" style="margin-top:12px">
       <button id="msSync">Add shifts to this calendar</button>
+      <button id="msTidy" class="sec" hidden>Remove old roster events from other calendars</button>
       <button id="msOut" class="sec">Disconnect</button>
     </div>
   </div>
@@ -1157,7 +1160,7 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.1",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.6.2",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -2751,14 +2754,46 @@ async function gcConnect(){
 }
 
 /* ---------- Work roster calendar: shifts and days off go in their own calendar ---------- */
-function wcAsk(kind){ // explains first, then returns true (create it) or false (not now)
+const WC_DEF={h:"A calendar just for your shifts",p:"Roster Hero will create a calendar called <b>Work roster</b> and put your shifts and days off in it. It keeps work apart from the rest of your life, and you can hide or delete it any time.",y:"Create it",n:"Not now"};
+function wcAsk(kind,t){ // explains first, then returns true (go ahead) or false (not now)
+  t=Object.assign({},WC_DEF,t||{});
   return new Promise(res=>{
-    $("wcP2").textContent=kind==="google"?"Google will ask for one extra permission, so Roster Hero can create it. It can only change calendars it created itself.":"";
-    $("wcP2").hidden=kind!=="google";
+    $("wcT").textContent=t.h;$("wcP1").innerHTML=t.p;$("wcYes").textContent=t.y;$("wcNo").textContent=t.n;
+    $("wcP2").textContent=kind==="google"&&!t.noExtra?"Google will ask for one extra permission, so Roster Hero can create it. It can only change calendars it created itself.":"";
+    $("wcP2").hidden=!$("wcP2").textContent;
     $("wc").hidden=false;
     const done=v=>{$("wc").hidden=true;$("wcYes").onclick=$("wcNo").onclick=null;res(v)};
     $("wcYes").onclick=()=>done(true);$("wcNo").onclick=()=>done(false);
   });
+}
+const tidyAsk=(n,where)=>wcAsk("tidy",{h:"Tidy up old shifts?",p:"Roster Hero found <b>"+n+"</b> shift"+(n===1?"":"s")+" and day"+(n===1?"":"s")+" off it added earlier to <b>"+where+"</b>. They now live in your Work roster calendar. Remove the old ones so nothing shows twice?<br><br>Only events Roster Hero added are removed. Your own events are never touched.",y:"Remove them",n:"Keep them"});
+/* Finds events Roster Hero itself added (hidden tag) in calendars other than the Work roster one. */
+async function gcTidyScan(){
+  const out=[];
+  for(const c of GC.cals){
+    if(c.id===GC.workId||!(c.accessRole==="owner"||c.accessRole==="writer"))continue;
+    let tok="",evs=[];
+    do{
+      const q={singleEvents:"true",privateExtendedProperty:"rosterApp=1",maxResults:"250",showDeleted:"false"};if(tok)q.pageToken=tok;
+      const r=await gcApi("/calendars/"+encodeURIComponent(c.id)+"/events?"+new URLSearchParams(q));
+      (r.items||[]).forEach(e=>{if(e.extendedProperties&&e.extendedProperties.private&&e.extendedProperties.private.rosterApp==="1")evs.push(e.id)});
+      tok=r.nextPageToken||"";
+    }while(tok);
+    if(evs.length)out.push({id:c.id,name:c.summaryOverride||c.summary||c.id,evs});
+  }
+  return out;
+}
+async function gcTidy(auto){
+  try{
+    if(!GC.workId){gcMsg("Create your Work roster calendar first.");return}
+    gcMsg("Looking for old roster events…");
+    const found=await gcTidyScan(),n=found.reduce((a,f)=>a+f.evs.length,0);
+    if(!n){gcMsg(auto?"Connected to Google Calendar.":"No old roster events found in your other calendars.");return}
+    if(!(await tidyAsk(n,found.map(f=>f.name).join(", ")))){gcMsg("OK. Old events left where they are.");return}
+    let del=0;
+    for(const f of found)for(const id of f.evs){try{await gcApi("/calendars/"+encodeURIComponent(f.id)+"/events/"+encodeURIComponent(id),{method:"DELETE"});del++}catch(e){if(e.status!==404&&e.status!==410)throw e}}
+    gcMsg("Removed "+del+" old event"+(del===1?"":"s")+". Your Work roster calendar is untouched.");
+  }catch(err){gcMsg("Couldn’t tidy up: "+(err.message||err))}
 }
 async function gcFindWork(){
   let wid=lsGet("rosterWorkCalG");
@@ -2785,10 +2820,11 @@ async function gcWorkSetup(manual){
     await gcCreateWork();lsSet("rosterWorkCalAsk","");
     await gcAfterConnect(true);
     gcMsg("Done. Shifts and days off now go in your Work roster calendar.");
+    await gcTidy(true);
   }catch(err){gcMsg("Couldn’t create the calendar: "+(err.message||err)+" Your shifts will go in the calendar you pick below.")}
   wcBtn();
 }
-function wcBtn(){const b=$("wcMake");if(b)b.hidden=!(GC.cals.length&&!GC.workId)}
+function wcBtn(){const b=$("wcMake");if(b)b.hidden=!(GC.cals.length&&!GC.workId);const t=$("gcTidy");if(t)t.hidden=!(GC.cals.length&&GC.workId)}
 async function gcAfterConnect(skipAsk){
   const l=await gcApi("/users/me/calendarList?minAccessRole=reader&maxResults=250");
   GC.cals=l.items||[];
@@ -2883,6 +2919,7 @@ async function gcSync(){
 }
 $("gcConnect").addEventListener("click",gcConnect);
 $("wcMake").addEventListener("click",()=>gcWorkSetup(true));
+$("gcTidy").addEventListener("click",()=>gcTidy(false));
 $("gcSync").addEventListener("click",gcSync);
 $("gcRefresh").addEventListener("click",()=>gcLoadEvents().catch(e=>gcMsg(e.message)));
 $("gcOut").addEventListener("click",()=>{
@@ -2961,7 +2998,29 @@ async function msApi(path,opt){
   return j;
 }
 
+
+async function msTidy(){
+  try{
+    const w=MS.cals.find(c=>c.id===lsGet("rosterWorkCalM")||c.name===WORK_NAME);
+    if(!w){msMsg("Create your Work roster calendar first.");return}
+    msMsg("Looking for old roster events…");
+    const found=[];
+    for(const c of MS.cals){
+      if(c.id===w.id)continue;
+      const r=await msApi("/me/calendars/"+encodeURIComponent(c.id)+"/events?"+new URLSearchParams({"$select":"id,categories","$top":"250","$filter":"categories/any(a:a eq '"+MS.cat+"')"}));
+      const ids=(r.value||[]).filter(e=>(e.categories||[]).includes(MS.cat)).map(e=>e.id);
+      if(ids.length)found.push({id:c.id,name:c.name,ids});
+    }
+    const n=found.reduce((a,f)=>a+f.ids.length,0);
+    if(!n){msMsg("No old roster events found in your other calendars.");return}
+    if(!(await tidyAsk(n,found.map(f=>f.name).join(", ")))){msMsg("OK. Old events left where they are.");return}
+    let del=0;
+    for(const f of found)for(const id of f.ids){try{await msApi("/me/events/"+encodeURIComponent(id),{method:"DELETE"});del++}catch(e){if(e.status!==404)throw e}}
+    msMsg("Removed "+del+" old event"+(del===1?"":"s")+". Your Work roster calendar is untouched.");
+  }catch(err){msMsg("Couldn’t tidy up: "+(err.message||err))}
+}
 async function msWorkSetup(manual){
+  let created=false;
   try{
     let w=MS.cals.find(c=>c.name===WORK_NAME);
     if(!w&&lsGet("rosterWorkCalM")){w=MS.cals.find(c=>c.id===lsGet("rosterWorkCalM"))}
@@ -2969,7 +3028,7 @@ async function msWorkSetup(manual){
       if(!manual&&lsGet("rosterWorkCalAskM")==="no")return;
       if(!(await wcAsk("outlook"))){lsSet("rosterWorkCalAskM","no");return}
       msMsg("Creating your Work roster calendar…");
-      w=await msApi("/me/calendars",{method:"POST",body:JSON.stringify({name:WORK_NAME})});
+      w=await msApi("/me/calendars",{method:"POST",body:JSON.stringify({name:WORK_NAME})});created=true;
       lsSet("rosterWorkCalAskM","");
       const j=await msApi("/me/calendars?$select=id,name,canEdit,isDefaultCalendar&$top=50");MS.cals=(j.value||[]).filter(c=>c.canEdit!==false);
       const sel=$("msTarget");sel.innerHTML="";MS.cals.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.name+(c.isDefaultCalendar?" (main)":"");sel.appendChild(o)});
@@ -2977,6 +3036,7 @@ async function msWorkSetup(manual){
     }
     lsSet("rosterWorkCalM",w.id);
     const sel=$("msTarget");if([...sel.options].some(o=>o.value===w.id))sel.value=w.id;
+    $("msTidy").hidden=false;if(created)await msTidy();
   }catch(err){msMsg("Couldn’t create the calendar: "+(err.message||err))}
 }
 async function msAfterConnect(){
@@ -3024,6 +3084,7 @@ async function msSync(){
 }
 $("msConnect").addEventListener("click",msConnect);
 $("msSync").addEventListener("click",msSync);
+$("msTidy").addEventListener("click",msTidy);
 $("msOut").addEventListener("click",msDisconnect);
 
 /* ---------- Deductions: any number, each before tax, after tax or not sure ---------- */
