@@ -1167,7 +1167,7 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.3",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.6.4",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -1737,7 +1737,16 @@ $("swapply").addEventListener("click",()=>{
   if(!changes.length){status("There are no changes to save.");return}
   const statusValue=$("swapStatus").value;
   changeLog.push({id:"chg-"+Date.now(),kind:changes.length>=2?"Linked shift swap":"Roster change",created:new Date().toISOString(),status:statusValue,who:$("swapWho").value.trim(),note:$("swapNote").value.trim(),changes,original:days.map(x=>({date:key(x.date),code:x.code})),result:window._pend.map(x=>({date:key(x.date),code:x.code}))});
-  days=window._pend.map(x=>({date:new Date(x.date),code:x.code}));window._pend=null;keepSel=false;renderHistory();draw();status("Change saved on this phone and added to the change history. To update your calendar, use the Add to calendar buttons on the Roster page. The colleague and comment go in the event note.");
+  days=window._pend.map(x=>({date:new Date(x.date),code:x.code}));window._pend=null;keepSel=false;renderHistory();draw();const gOn=GC.cals.length>0,mOn=!$("msConn").hidden&&MS.cals.length>0;
+  if(!gOn&&!mOn){status("Swap saved. Connect a calendar in Setup to update it, or use Add to calendar on the Roster page.");return}
+  status("Swap saved. Updating your calendar…");
+  (async()=>{
+    const b=$("swapply");b.hidden=false;let ok=true;
+    if(gOn)ok=(await gcSync({btn:b,working:"Updating calendar…",done:"Saved · calendar updated"}))&&ok;
+    if(mOn)ok=(await msSync({btn:b,working:"Updating calendar…",done:"Saved · calendar updated"}))&&ok;
+    status(ok?"Swap saved and your calendar is updated. The colleague and comment are in the event note.":"Swap saved on this phone, but the calendar didn’t update. Check Setup and try Add shifts to this calendar.");
+    setTimeout(()=>{if(!window._pend)b.hidden=true},5200);
+  })();
 });
 $("buf").addEventListener("input",swapCalc);
 document.querySelectorAll("#pay input,#pay textarea,#buf").forEach(e=>e.addEventListener("input",()=>{pay();swapCalc();persist()}));
@@ -2913,13 +2922,13 @@ function btnState(b,state,txt){
   else{b.textContent=b._o;return}
   b._t=setTimeout(()=>{b.classList.remove("ok","bad");b.textContent=b._o},5000);
 }
-async function gcSync(){
+async function gcSync(opt){const SB=(opt&&opt.btn)||$("gcSync");
   if(!days.length){gcMsg("Save a roster first.");return}
   const items=shifts();if(!items.length){gcMsg("There are no shifts to add.");return}
   if(!GC.cals.length){gcMsg("Connect Google Calendar first.");go("calendar");return}
   try{
     const cal=encodeURIComponent($("gcTarget").value||"primary"),want=new Map(items.map(i=>[gcId(i),i]));offDays().forEach(o=>want.set(o.id,o));
-    gcMsg("Adding your shifts…");btnState($("gcSync"),"work","Adding…");
+    gcMsg("Adding your shifts…");btnState(SB,"work",(opt&&opt.working)||"Adding…");
     const min=new Date(days[0].date.getFullYear(),days[0].date.getMonth(),days[0].date.getDate()-1),last=days[days.length-1].date;
     const max=new Date(last.getFullYear(),last.getMonth(),last.getDate()+3);
     const ex=await gcApi("/calendars/"+cal+"/events?"+new URLSearchParams({timeMin:min.toISOString(),timeMax:max.toISOString(),singleEvents:"true",privateExtendedProperty:"rosterApp=1",maxResults:"250"}));
@@ -2932,13 +2941,13 @@ async function gcSync(){
       catch(e){if(e.status===409){await gcApi("/calendars/"+cal+"/events/"+id,{method:"PUT",body:JSON.stringify(body)});upd++}else throw e}
     }
     const msg="Calendar updated: "+add+" added, "+upd+" refreshed"+(del?", "+del+" removed":"")+".";
-    gcMsg(msg);status(msg);btnState($("gcSync"),"ok","Done · "+(add+upd)+" saved");
-  }catch(err){gcMsg("Couldn’t update your calendar: "+(err.message||err));btnState($("gcSync"),"bad")}
+    gcMsg(msg);status(msg);btnState(SB,"ok",(opt&&opt.done)||("Done · "+(add+upd)+" saved"));return true;
+  }catch(err){gcMsg("Couldn’t update your calendar: "+(err.message||err));btnState(SB,"bad");return false}
 }
 $("gcConnect").addEventListener("click",gcConnect);
 $("wcMake").addEventListener("click",()=>gcWorkSetup(true));
 $("gcTidy").addEventListener("click",()=>gcTidy(false));
-$("gcSync").addEventListener("click",gcSync);
+$("gcSync").addEventListener("click",()=>gcSync());
 $("gcRefresh").addEventListener("click",()=>gcLoadEvents().catch(e=>gcMsg(e.message)));
 $("gcOut").addEventListener("click",()=>{
   try{if(GC.token&&window.google&&google.accounts)google.accounts.oauth2.revoke(GC.token,()=>{})}catch(e){}
@@ -3072,12 +3081,12 @@ function msDisconnect(){
 }
 const msIso=d=>d.toISOString().slice(0,19);
 const msKey=(sub,s,e)=>sub+"|"+s+"|"+e;
-async function msSync(){
+async function msSync(opt){const SB=(opt&&opt.btn)||$("msSync");
   if(!days.length){msMsg("Save a roster first.");return}
   const items=shifts();if(!items.length){msMsg("There are no shifts to add.");return}
   const cal=encodeURIComponent($("msTarget").value);if(!cal){msMsg("Connect Outlook first.");return}
   try{
-    msMsg("Adding your shifts…");btnState($("msSync"),"work","Adding…");
+    msMsg("Adding your shifts…");btnState(SB,"work",(opt&&opt.working)||"Adding…");
     const want=new Map(items.map(i=>[msKey(i.name+" shift",msIso(i.start),msIso(i.end)),i]));offDays().forEach(o=>want.set(msKey(o.name,dstr(o.start)+"T00:00:00",dstr(o.end)+"T00:00:00"),o));
     const min=new Date(days[0].date.getFullYear(),days[0].date.getMonth(),days[0].date.getDate()-1),last=days[days.length-1].date;
     const max=new Date(last.getFullYear(),last.getMonth(),last.getDate()+3);
@@ -3097,11 +3106,11 @@ async function msSync(){
       await msApi("/me/calendars/"+cal+"/events",{method:"POST",body:JSON.stringify(body)});add++;
     }
     const msg="Outlook updated: "+add+" added, "+have.size+" already there"+(del?", "+del+" removed":"")+".";
-    msMsg(msg);status(msg);btnState($("msSync"),"ok","Done");
-  }catch(err){msMsg("Couldn’t update Outlook: "+(err.message||err));btnState($("msSync"),"bad")}
+    msMsg(msg);status(msg);btnState(SB,"ok",(opt&&opt.done)||"Done");return true;
+  }catch(err){msMsg("Couldn’t update Outlook: "+(err.message||err));btnState(SB,"bad");return false}
 }
 $("msConnect").addEventListener("click",msConnect);
-$("msSync").addEventListener("click",msSync);
+$("msSync").addEventListener("click",()=>msSync());
 $("msTidy").addEventListener("click",msTidy);
 $("msOut").addEventListener("click",msDisconnect);
 
