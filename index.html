@@ -1157,7 +1157,7 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.0",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.6.1",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -1734,6 +1734,15 @@ document.querySelectorAll("#pay input,#pay textarea,#buf").forEach(e=>e.addEvent
 restore();
 
 /* One-time fix (1.5.5): BOSS night shifts run 21:00 to 07:30 with a 30 minute unpaid break. Earlier versions had 07:00 and no break. */
+(function(){ // 1.6.1: also fix saved night times of exactly 21:00-07:00 even when the break box already has a number
+  try{
+    if(lsGet("rosterFix161"))return;lsSet("rosterFix161","1");
+    const o=readDefs();let ch=false;
+    ["N","N2"].forEach(c=>{if(o[c]&&o[c].s==="21:00"&&o[c].e==="07:00"){o[c].e="07:30";if(!+o[c].brk)o[c].brk=30;ch=true}});
+    const un=$("u_N");if(un&&(un.value===""||+un.value===0)){un.value="30";ch=true}
+    if(ch){lsSet("rosterShiftDefs",JSON.stringify(o));applyShiftDefs();try{un.dispatchEvent(new Event("input",{bubbles:true}))}catch(e){}}
+  }catch(e){}
+})();
 (function(){
   try{
     if(lsGet("rosterFix155"))return;lsSet("rosterFix155","1");
