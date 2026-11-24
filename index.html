@@ -526,6 +526,13 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
 #wc[hidden]{display:none}
 #wc .wcbox{background:var(--card);border-radius:22px;padding:22px 20px;max-width:420px;width:100%;box-shadow:var(--shadow);display:grid;gap:10px;text-align:center}
 #wc .wcico{font-size:2.2rem}#wc h2{margin:0;font-size:1.3rem}#wc p{margin:0}
+#gcSync.busy,#msSync.busy,#gcSync.ok,#msSync.ok,#gcSync.bad,#msSync.bad{transition:background .2s}
+.busy{opacity:.92;cursor:progress}
+.busy::before{content:"";display:inline-block;width:14px;height:14px;margin-right:9px;vertical-align:-2px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:btnspin .8s linear infinite}
+@keyframes btnspin{to{transform:rotate(360deg)}}
+button.ok{background:#168a57!important;color:#fff!important;border-color:#168a57!important}
+button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4b!important}
+@media (prefers-reduced-motion:reduce){.busy::before{animation:none}}
 </style>
 </head>
 <body>
@@ -783,10 +790,10 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
   </div>
   <div id="gcConn" hidden>
     <div class="set"><label for="gcTarget">Save my shifts to</label><select id="gcTarget" style="grid-column:2"></select></div>
+    <div class="stack" style="margin-top:12px"><button id="gcSync">Add shifts to this calendar</button></div>
     <p class="fieldlabel" style="margin:14px 0 4px">Check clashes against</p>
     <div id="gcChecks" class="choices"></div>
     <div class="stack" style="margin-top:12px">
-      <button id="gcSync">Add shifts to this calendar</button>
       <button id="gcRefresh" class="sec">Reload calendar events for clash checks</button>
       <button id="wcMake" class="sec" hidden>Create a “Work roster” calendar</button>
       <button id="gcTidy" class="sec" hidden>Remove old roster events from other calendars</button>
@@ -802,8 +809,8 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
   <div class="stack"><button id="msConnect">Connect Outlook</button></div>
   <div id="msConn" hidden>
     <div class="set"><label for="msTarget">Add my shifts to</label><select id="msTarget" style="grid-column:2"></select></div>
+    <div class="stack" style="margin-top:12px"><button id="msSync">Add shifts to this calendar</button></div>
     <div class="stack" style="margin-top:12px">
-      <button id="msSync">Add shifts to this calendar</button>
       <button id="msTidy" class="sec" hidden>Remove old roster events from other calendars</button>
       <button id="msOut" class="sec">Disconnect</button>
     </div>
@@ -1160,7 +1167,7 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.2",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.6.3",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -2895,13 +2902,24 @@ function offDays(arr){
 }
 const gcOff=(id,i)=>({id,status:"confirmed",summary:i.name,description:"Day off from your roster. Added by "+APP_CONFIG.name+".",start:{date:dstr(i.start)},end:{date:dstr(i.end)},transparency:"transparent",colorId:"8",extendedProperties:{private:{rosterApp:"1"}},reminders:{useDefault:false}});
 const gcId=i=>"roster"+i.start.getFullYear()+p2(i.start.getMonth()+1)+p2(i.start.getDate())+({E:1,L:2,N:3,N2:4}[i.code]||0);
+/* Button shows its own progress: working, then done (or try again). */
+function btnState(b,state,txt){
+  if(!b)return;clearTimeout(b._t);if(b._o===undefined)b._o=b.textContent;
+  b.classList.remove("busy","ok","bad");
+  if(state==="work"){b.disabled=true;b.classList.add("busy");b.textContent=txt||"Adding…";b.setAttribute("aria-busy","true");return}
+  b.disabled=false;b.removeAttribute("aria-busy");
+  if(state==="ok"){b.classList.add("ok");b.textContent="✓ "+(txt||"Done")}
+  else if(state==="bad"){b.classList.add("bad");b.textContent=txt||"Didn’t work. Tap to retry"}
+  else{b.textContent=b._o;return}
+  b._t=setTimeout(()=>{b.classList.remove("ok","bad");b.textContent=b._o},5000);
+}
 async function gcSync(){
   if(!days.length){gcMsg("Save a roster first.");return}
   const items=shifts();if(!items.length){gcMsg("There are no shifts to add.");return}
   if(!GC.cals.length){gcMsg("Connect Google Calendar first.");go("calendar");return}
   try{
     const cal=encodeURIComponent($("gcTarget").value||"primary"),want=new Map(items.map(i=>[gcId(i),i]));offDays().forEach(o=>want.set(o.id,o));
-    gcMsg("Adding your shifts…");
+    gcMsg("Adding your shifts…");btnState($("gcSync"),"work","Adding…");
     const min=new Date(days[0].date.getFullYear(),days[0].date.getMonth(),days[0].date.getDate()-1),last=days[days.length-1].date;
     const max=new Date(last.getFullYear(),last.getMonth(),last.getDate()+3);
     const ex=await gcApi("/calendars/"+cal+"/events?"+new URLSearchParams({timeMin:min.toISOString(),timeMax:max.toISOString(),singleEvents:"true",privateExtendedProperty:"rosterApp=1",maxResults:"250"}));
@@ -2914,8 +2932,8 @@ async function gcSync(){
       catch(e){if(e.status===409){await gcApi("/calendars/"+cal+"/events/"+id,{method:"PUT",body:JSON.stringify(body)});upd++}else throw e}
     }
     const msg="Calendar updated: "+add+" added, "+upd+" refreshed"+(del?", "+del+" removed":"")+".";
-    gcMsg(msg);status(msg);
-  }catch(err){gcMsg("Couldn’t update your calendar: "+(err.message||err))}
+    gcMsg(msg);status(msg);btnState($("gcSync"),"ok","Done · "+(add+upd)+" saved");
+  }catch(err){gcMsg("Couldn’t update your calendar: "+(err.message||err));btnState($("gcSync"),"bad")}
 }
 $("gcConnect").addEventListener("click",gcConnect);
 $("wcMake").addEventListener("click",()=>gcWorkSetup(true));
@@ -3059,7 +3077,7 @@ async function msSync(){
   const items=shifts();if(!items.length){msMsg("There are no shifts to add.");return}
   const cal=encodeURIComponent($("msTarget").value);if(!cal){msMsg("Connect Outlook first.");return}
   try{
-    msMsg("Adding your shifts…");
+    msMsg("Adding your shifts…");btnState($("msSync"),"work","Adding…");
     const want=new Map(items.map(i=>[msKey(i.name+" shift",msIso(i.start),msIso(i.end)),i]));offDays().forEach(o=>want.set(msKey(o.name,dstr(o.start)+"T00:00:00",dstr(o.end)+"T00:00:00"),o));
     const min=new Date(days[0].date.getFullYear(),days[0].date.getMonth(),days[0].date.getDate()-1),last=days[days.length-1].date;
     const max=new Date(last.getFullYear(),last.getMonth(),last.getDate()+3);
@@ -3079,8 +3097,8 @@ async function msSync(){
       await msApi("/me/calendars/"+cal+"/events",{method:"POST",body:JSON.stringify(body)});add++;
     }
     const msg="Outlook updated: "+add+" added, "+have.size+" already there"+(del?", "+del+" removed":"")+".";
-    msMsg(msg);status(msg);
-  }catch(err){msMsg("Couldn’t update Outlook: "+(err.message||err))}
+    msMsg(msg);status(msg);btnState($("msSync"),"ok","Done");
+  }catch(err){msMsg("Couldn’t update Outlook: "+(err.message||err));btnState($("msSync"),"bad")}
 }
 $("msConnect").addEventListener("click",msConnect);
 $("msSync").addEventListener("click",msSync);
