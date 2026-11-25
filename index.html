@@ -533,6 +533,44 @@ button:not(.codebtn):not(.linkbtn):not(.sec):hover,label.btn:not(.sec):hover{bac
 button.ok{background:#168a57!important;color:#fff!important;border-color:#168a57!important}
 button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4b!important}
 @media (prefers-reduced-motion:reduce){.busy::before{animation:none}}
+
+/* ---- Tour (one flowing story) ---- */
+#tour{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:linear-gradient(180deg,#cfe6ff,#eef2ff 55%,#f7efff);overflow:hidden}
+#tour[hidden]{display:none}
+.twtop{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 4px;z-index:3}
+#tour .twb{all:unset;cursor:pointer;font-size:2rem;line-height:1;padding:2px 10px;color:#4a4580}#tour .twb.sm{font-size:1rem}
+.twbar{flex:1;height:5px;border-radius:99px;background:rgba(80,70,180,.18);overflow:hidden}.twbar i{display:block;height:100%;width:0;background:var(--grad);transition:width .4s linear}
+.twphwrap{flex:1;min-height:0;display:grid;place-items:center;padding:4px 0}
+.twph{position:relative;border-radius:30px;background:#16143a;box-shadow:0 18px 40px rgba(43,37,96,.35)}
+.twscr{position:absolute;left:7px;top:7px;width:390px;height:844px;overflow:hidden;border-radius:24px;background:#fff;transform-origin:top left}
+.twscr iframe{width:390px;height:844px;border:0;pointer-events:none;display:block}
+.twflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}.twflash.go{animation:twfl .5s ease-out}
+@keyframes twfl{0%{opacity:.95}100%{opacity:0}}
+.twring{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:5px solid rgba(255,200,61,.95);background:rgba(255,200,61,.3);opacity:0;pointer-events:none}.twring.go{animation:twrg .6s ease-out}
+@keyframes twrg{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.5)}}
+.twboss{position:absolute;inset:0;background:#f4f6fb;font:600 14px system-ui,sans-serif;color:#1c2a4d;padding:46px 14px 14px}
+.twboss h3{margin:0 0 4px;font:800 22px system-ui,sans-serif}.twboss small{color:#6b7a99;display:block;margin-bottom:12px}
+.twboss .g{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.twboss .g b{aspect-ratio:1;display:grid;place-items:center;border-radius:6px;background:#fff;border:1px solid #d5dcec;font-size:13px}
+.twboss .g b.h{background:transparent;border:0;aspect-ratio:auto;color:#6b7a99;font-size:11px}
+.twcap{min-height:58px;padding:6px 22px;text-align:center;font:700 1rem/1.3 var(--ui);color:#1b1750;display:flex;align-items:center;justify-content:center;z-index:2}
+.twcap span{background:rgba(255,255,255,.82);border-radius:14px;padding:7px 14px;box-shadow:0 4px 14px rgba(43,37,96,.12)}
+.twcap.f span{border-bottom:3px solid #ff8fb0}.twcap.m span{border-bottom:3px solid #6fa8ff}
+.twroom{position:relative;height:30vh;min-height:190px;flex:none;background:linear-gradient(#e9f3ff 0 68%,#cfdcf5 68%);overflow:hidden}
+.twwin{position:absolute;left:34%;top:8%;width:32%;height:40%;border-radius:10px;background:linear-gradient(#bfe3ff,#e8f6ff);border:5px solid #fff;box-shadow:0 4px 12px rgba(43,37,96,.12)}
+.twbench{position:absolute;left:0;right:0;bottom:30%;height:8px;background:#b9c6e6}
+.twbench .mug{position:absolute;bottom:8px;left:44%;width:16px;height:18px;border-radius:3px 3px 6px 6px;background:#ffc83d}.twbench .mug.m2{left:50%;background:#8db4ff}.twbench .kettle{position:absolute;bottom:8px;left:56%;width:26px;height:24px;border-radius:12px 12px 4px 4px;background:#9aa7c9}
+.twch{position:absolute;bottom:0;width:36%;height:96%;transition:transform 2s ease-out;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.twch.m{left:5%}.twch.f{right:5%;transform:translateX(150%)}.twch.f.in{transform:none}
+.twch svg,.twch img{height:100%;width:auto;max-width:100%}
+.twch.sp{animation:twsp .7s ease-in-out infinite}.twch.ex{animation:twex .5s ease-in-out infinite}
+@keyframes twsp{50%{transform:translateY(-4px)}}@keyframes twex{50%{transform:translateY(-12px)}}
+.twch.f.in.sp{animation-name:twsp}
+.twch .tp{fill:#9fb4ff}.twch.tap .tp{fill:#ffd24d}
+.twend{position:absolute;inset:0;z-index:5;background:rgba(240,244,255,.98);display:grid;place-items:center;padding:24px}
+.twend[hidden]{display:none}
+.twendbox{width:100%;max-width:380px;text-align:center;display:grid;gap:12px}
+.twendbox h2{font:800 1.8rem/1.1 var(--display);margin:0;color:#1b1750}.twendbox p{margin:0;color:#3a3670}
+@media(prefers-reduced-motion:reduce){.twch,.twch.sp,.twch.ex{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -1032,19 +1070,16 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
 </main>
 <div id="setup" hidden role="dialog" aria-modal="true" aria-labelledby="suTitle">
   <div class="sheet">
-    <div class="wzprog" id="wzProg"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="wzprog" id="wzProg"><i></i><i></i><i></i><i></i></div>
     <p class="step" id="suStep"></p>
     <h2 id="suTitle">Set up your estimates</h2>
     <p class="hint" id="suIntro" style="margin-top:0">A few quick questions so the pay figures fit you. You can skip anything and change it later.</p>
 
     <div class="wzs wzonly" data-wz="1">
-      <p class="hint" style="margin-top:0">Roster Hero reads a screenshot of your roster. Grab it now so it’s ready:</p>
-      <ol class="steps">
-        <li>Open <strong>BOSS</strong> and go to your roster.</li>
-        <li>Show the whole roster period, with the dates and shift codes visible.</li>
-        <li>Take a screenshot, then come back here. <small>(Android: Power + Volume down. iPhone: Side button + Volume up.)</small></li>
-      </ol>
-      <p class="hint">Already have one saved? Great. Tap Next.</p>
+      <p class="hint" style="margin-top:0">Do this first, so Roster Hero can warn you about clashes with your other plans the moment your roster is read. You can skip it and do it later in Setup.</p>
+      <div class="stack"><button type="button" id="wzGcal">📅 Connect Google Calendar</button></div>
+      <p class="hint" id="wzCalMsg" role="status"></p>
+      <p class="hint">Outlook and Apple Calendar are in Setup &rarr; Calendar.</p>
     </div>
     <div class="wzs" data-wz="2">
     <label for="su_pp" class="fieldlabel">Your pay point</label>
@@ -1069,20 +1104,21 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
     </div>
 
     </div>
-    <div class="wzs" data-wz="4">
+    <div class="wzs" data-wz="0">
     <p class="fieldlabel">Your shift times</p>
     <p class="hint" id="suTimes" style="margin-top:0"></p>
     <div class="stack"><button type="button" class="sec" id="suTimesChange">Change my shift times</button></div>
     </div>
-    <div class="wzs wzonly" data-wz="5">
-      <p class="hint" style="margin-top:0">Add your shifts to your phone calendar and spot clashes with your other plans. You can skip this and do it later in Setup.</p>
-      <div class="stack"><button type="button" id="wzGcal">📅 Connect Google Calendar</button></div>
-      <p class="hint" id="wzCalMsg" role="status"></p>
-      <p class="hint">Outlook and Apple Calendar are in Setup &rarr; Calendar.</p>
-    </div>
-    <div class="wzs wzonly" data-wz="6">
-      <p class="hint" style="margin-top:0">Now choose the screenshot you took of your roster in BOSS and watch it get read. It takes about a minute.</p>
+    <div class="wzs wzonly" data-wz="4">
+      <p class="hint" style="margin-top:0">Last step. Roster Hero reads a screenshot of your roster:</p>
+      <ol class="steps">
+        <li>Open <strong>BOSS</strong> and go to your roster.</li>
+        <li>Show the whole roster period, with the dates and shift codes visible.</li>
+        <li>Take a screenshot. <small>(Android: Power + Volume down. iPhone: Side button + Volume up.)</small></li>
+        <li>Come back here and choose it. It takes about a minute to read.</li>
+      </ol>
       <div class="stack"><button type="button" id="wzShot">📷 Choose my roster screenshot</button></div>
+      <p class="hint">Afterwards, check your shift times match your roster (the app will show them to you).</p>
     </div>
 
     <div class="stack" id="suBtns" style="margin-top:18px">
@@ -1119,10 +1155,12 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
   <div class="rvfoot"><button type="button" class="sec" id="rvBack">&lsaquo; Back</button><button type="button" id="rvNext"></button></div>
 </div>
 <div id="tour" hidden role="dialog" aria-modal="true" aria-label="How it works">
-  <div class="tvtop"><button type="button" class="tvx" id="tvX" aria-label="Close">&times;</button><div class="tvprog" id="tvProg" aria-hidden="true"></div><button type="button" class="tvm" id="tvMute" aria-label="Sound on or off" hidden>🔊</button></div>
-  <div class="tvstage" id="tvStage" aria-live="polite"></div>
-  <div class="tvtext"><h2 id="tvH"></h2><p id="tvP"></p></div>
-  <div class="tvfoot"><button type="button" class="sec" id="tvBack">&lsaquo; Back</button><button type="button" id="tvNext">Next</button></div>
+  <div class="twtop"><button type="button" class="twb" id="twX" aria-label="Close">&times;</button><div class="twbar" aria-hidden="true"><i id="twBar"></i></div><button type="button" class="twb sm" id="twPause" aria-label="Pause or play">&#10074;&#10074;</button></div>
+  <div class="twphwrap" id="twPhWrap"><div class="twph" id="twPh"><div class="twscr" id="twScr"><iframe id="twDemo" name="rhdemo" title="Roster Hero demo" tabindex="-1"></iframe><div class="twboss" id="twBoss" hidden></div><div class="twflash" id="twFlash"></div><div class="twring" id="twRing"></div></div></div></div>
+  <div class="twcap" id="twCap" aria-live="polite"></div>
+  <div class="twroom" id="twRoom"><div class="twwin"></div><div class="twbench"><i class="mug"></i><i class="mug m2"></i><i class="kettle"></i></div>
+    <div class="twch f" id="twF"></div><div class="twch m" id="twM"></div></div>
+  <div class="twend" id="twEnd" hidden><div class="twendbox"><h2>Getting started is simple</h2><p>Follow the setup wizard once, then you’re good to go.</p><button type="button" id="twWiz">✨ Take me to the setup wizard</button><button type="button" class="sec" id="twSolo">Go solo</button><button type="button" class="sec" id="twAgain">&#8635; Watch again</button></div></div>
 </div>
 <div id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="wlTitle">
   <div class="wlhero" aria-hidden="true">
@@ -1167,6 +1205,11 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
+/* Tour demo mode: the tour runs the real app in a hidden frame named rhdemo, with its own memory-only storage so a user's saved data is never touched. */
+if(window.name==="rhdemo"){(function(){var m={rosterTerms:JSON.stringify({v:"2026-11-21",t:new Date().toISOString()}),rosterSkip:"1",rosterGuide:"off",rosterFix155:"1",rosterFix161:"1",rosterWorkCalAsk:"no",rosterWorkCalAskM:"no",rosterHeroN:"0"};
+var sh={getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]},clear:function(){m={}},key:function(i){return Object.keys(m)[i]||null}};
+Object.defineProperty(sh,"length",{get:function(){return Object.keys(m).length}});
+try{Object.defineProperty(window,"localStorage",{value:sh,configurable:true})}catch(e){}window.__rhDemo=1})()}
 /* Start-up safety net (1.6.7): if the app fails to start, show what went wrong instead of a blank screen. */
 (function(){var errs=[];
 window.addEventListener("error",function(e){errs.push((e.message||"error")+(e.lineno?" (line "+e.lineno+")":""))});
@@ -1183,7 +1226,7 @@ window.addEventListener("load",function(){setTimeout(function(){
 })();
 </script>
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.7",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.7.0",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -2622,7 +2665,8 @@ $("applyOCR").addEventListener("click",()=>{
   if(!ocrDraft.length)return;
   const map=new Map(ocrDraft.map(x=>[key(x.date),{date:new Date(x.date),code:x.code}]));
   days=[...map.values()].sort((a,b)=>a.date-b.date);
-  $("chk").hidden=false;draw();renderHistory();scanClashes();status("Saved "+days.length+" dates from your screenshot to this browser.");
+  $("chk").hidden=false;draw();renderHistory();scanClashes();status("Saved "+days.length+" dates from your screenshot to this browser.")
+  if(lsGet("rosterWizTimes")){try{localStorage.removeItem("rosterWizTimes")}catch(e){}$("stBox").open=true;status("Saved "+days.length+" dates. Now check your shift times below match your roster.")}
   $("ocrStatus").textContent="Roster saved locally. You can now use the planner and pay calculator.";
 });
 
@@ -3387,7 +3431,7 @@ addEventListener("appinstalled",()=>{$("installBtn").hidden=true;deferredInstall
 $("installBtn").addEventListener("click",async()=>{if(!deferredInstall)return;deferredInstall.prompt();try{await deferredInstall.userChoice}catch(e){}deferredInstall=null;$("installBtn").hidden=true});
 if(/iPhone|iPad|iPod/.test(navigator.userAgent)&&!(navigator.standalone))$("iosHint").hidden=false;
 $("appName").textContent=APP_CONFIG.name;document.querySelector('meta[name="apple-mobile-web-app-title"]').content=APP_CONFIG.name;$("abVer").textContent=APP_CONFIG.version;$("abRates").textContent=APP_CONFIG.ratesUpdated;
-if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
+if("serviceWorker" in navigator&&!window.__rhDemo&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 /* ---------- New version check: quietly look for a newer copy and offer a one-tap update ---------- */
 (function(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -3740,7 +3784,7 @@ buildPlans();planBoot();
 
 
 /* ---------- Setup wizard: one question per screen ---------- */
-const WZ={n:1,total:6,titles:["Get your roster ready","Your pay point","Salary sacrifice and deductions","Your shift times","Connect your calendar","You’re all set"]};
+const WZ={n:1,total:4,titles:["Connect your calendar","Your pay point","Salary sacrifice and deductions","Your roster screenshot"]};
 function wzOpen(){
   openSetup();$("setup").dataset.mode="wiz";WZ.n=1;wzGo(1);
 }
@@ -3752,8 +3796,8 @@ function wzGo(n){
   const nx=$("wzNext"),bk=$("wzBack");
   bk.hidden=WZ.n===1;bk.textContent=WZ.n===WZ.total?"Later":"‹ Back";
   nx.hidden=WZ.n===WZ.total;
-  nx.textContent=WZ.n===1?"I’ve got it":WZ.n===4?"Yes, they match":WZ.n===5?(GC.cals.length?"Next":"Skip for now"):"Next";
-  if(WZ.n===5)wzCalMsg();
+  nx.textContent=WZ.n===1?(GC.cals.length?"Next":"Skip for now"):"Next";
+  if(WZ.n===1)wzCalMsg();
   $("setup").querySelector(".sheet").scrollTop=0;
 }
 function wzCalMsg(){
@@ -3761,10 +3805,10 @@ function wzCalMsg(){
   $("wzGcal").hidden=!!GC.cals.length;
   $("wzNext").textContent=GC.cals.length?"Next":"Skip for now";
 }
-$("wzNext").addEventListener("click",()=>{if(WZ.n===4)suApply();wzGo(WZ.n+1)});
+$("wzNext").addEventListener("click",()=>{if(WZ.n===3)suApply();wzGo(WZ.n+1)});
 $("wzBack").addEventListener("click",()=>{if(WZ.n===WZ.total){suApply();closeSetup();return}wzGo(WZ.n-1)});
 $("wzGcal").addEventListener("click",async()=>{$("wzCalMsg").textContent="Opening Google…";try{await gcConnect()}catch(e){}wzCalMsg();if(!GC.cals.length)$("wzCalMsg").textContent=$("gcStatus").textContent});
-$("wzShot").addEventListener("click",()=>{suApply();closeSetup();if(window.go)go("roster");$("file").click()});
+$("wzShot").addEventListener("click",()=>{suApply();lsSet("rosterWizTimes","1");closeSetup();if(window.go)go("roster");$("file").click()});
 
 /* ---------- Landing choices ---------- */
 function syncLanding(){$("welcome").dataset.done=(lsGet("rosterSetupDone")||lsGet("rosterSkip"))?"1":""}
@@ -3773,64 +3817,158 @@ $("wlSkip").addEventListener("click",e=>{e.preventDefault();lsSet("rosterSkip","
 $("wlTour").addEventListener("click",e=>{e.preventDefault();tourOpen()});
 
 
-/* ---------- Animated tour ---------- */
-const TOUR={audio:false,dir:"tour/"};   // set audio:true once scene1.m4a … scene7.m4a are added next to this page
-const tvGrid=(cs,delay)=>'<div class="tg">'+cs.map((c,i)=>'<b class="'+c+'" style="animation-delay:'+((delay||0)+i*0.03)+'s"></b>').join("")+'</div>';
-const TV_CODES="e e x l l n n x x e l l x a e e l l n n x x x e e l l x e e".split(" ");
-const TVC={e:"#ffc83d",l:"#8db4ff",n:"#b79cff",x:"#e3e8f7",a:"#7ee0c0"};
-const tvGrid2=(cs,fill)=>'<div class="tg w">'+cs.map((c,i)=>'<b class="'+(fill?"f":"")+' '+c+'" style="--c:'+TVC[c]+';animation-delay:'+(fill?(i%7*.04+Math.floor(i/7)*.35):i*.03)+'s"></b>').join("")+'</div>';
-const TVDAYS='<div class="tvdays">'+"MTWTFSS".split("").map(d=>"<span>"+d+"</span>").join("")+'</div>';
-const phone=(inner,t,btn)=>'<div class="tph"><div class="tvhd">'+(t||"Roster Hero")+'</div>'+inner+(btn?'<div class="tvbtn">'+btn+'</div>':"")+'</div>';
-const TV=[
- {h:"Meet Roster Hero",p:"Your roster, sorted.",b:"Hi! I’m your Roster Hero.",art:()=>phone(TVDAYS+tvGrid2(TV_CODES.slice(0,28)),"Your roster")+'<span class="tvsp" style="left:12%;top:14%">✨</span><span class="tvsp" style="right:12%;top:26%;animation-delay:-1s">⭐</span><span class="tvsp" style="left:16%;bottom:12%;animation-delay:-2s">💙</span>'},
- {h:"Screenshot it",p:"From BOSS. That’s all.",b:"Just one screenshot. 📸",art:()=>'<div class="tph"><div style="padding:22px 10px;display:grid;gap:7px"><div style="height:16px;border-radius:5px;background:#2b2560;opacity:.85"></div>'+Array.from({length:8},(_,i)=>'<div style="height:14px;border-radius:5px;background:#e3e8f7;opacity:'+(1-i*.07)+'"></div>').join("")+'</div><div class="tvflash"></div></div><span class="tvbadge" style="right:14%;top:18%">📸</span>'},
- {h:"Check each week",p:"Tap a day to change it. Try it!",b:"Go on, tap a day!",art:()=>{const c=["#ffc83d","#ffc83d","#e3e8f7","#8db4ff","#8db4ff","#b79cff","#b79cff"],t="E E X L L N N".split(" ");return '<div style="display:grid;gap:14px;justify-items:center"><div style="font:800 1.1rem var(--ui);color:#1b1750">Week 1 of 4</div><div class="tvwk">'+c.map((x,i)=>'<b style="background:'+x+';animation-delay:'+(i*.12)+'s">'+t[i]+'</b>').join("")+'</div><div class="tvtick" style="position:relative;margin-top:4px">✓</div></div>'}},
- {h:"Into your calendar",p:"Shifts and days off.",b:"Nothing doubles up.",art:()=>phone('<div style="position:absolute;inset:44px 0 0"><div style="margin:0 8px 8px;height:14px;border-radius:5px;background:#e3e8f7;color:#7a7aa8;font:700 7px/14px var(--ui);padding-left:6px">RDO</div>'+[["#ffc83d",0],["#8db4ff",.35],["#b79cff",.7],["#7ee0c0",1.05]].map((x,i)=>'<div class="tvev" style="top:'+(30+i*32)+'px;background:'+x[0]+';animation-delay:'+x[1]+'s"></div>').join("")+'</div>',"Calendar")},
- {h:"Your pay, roughly",p:"An estimate, not payroll.",b:"Penalties and all.",art:()=>'<div style="text-align:center"><span class="tvcoin">💰</span><div class="tvpay" id="tvCount">$0</div><div style="color:#3a3670;font-weight:700;margin-top:6px">example only</div></div>'},
- {h:"Test a swap",p:"Pay, rules, clashes.",b:"Test it first.",art:()=>'<div class="tvswap"><b class="s1" style="background:#ffc83d">E</b><b class="s2" style="background:#b79cff">N<span class="tvdot"></span></b></div>'},
- {h:"Ready?",p:"Setup takes two minutes.",b:"Let’s go! 🎉",conf:1,art:()=>'<img class="tvicon" alt="" src="'+(document.querySelector("header img")||{}).src+'">'}
-];
-function tvAvatar(){
-  const el=document.createElement("div");el.className="tvav";
-  let n=0;try{n=parseInt(localStorage.getItem("rosterHeroN"),10)||0}catch(e){}
-  const im=document.querySelector("#welcome .wlimg img"),f=[[29.8,28.4],[27.4,24.5]][n%2]||[29.8,28.4];
-  if(im&&im.src&&im.src.length>200){el.style.backgroundImage='url("'+im.src+'")';el.style.backgroundSize="263% auto";el.style.backgroundPosition=f[0]+"% "+f[1]+"%"}
-  return el;
+/* ---------- Tour: one flowing story (two nurses, the real app on the big phone) ---------- */
+const TOUR={audio:false,dir:"tour/",img:{}};   // img: {f:"tour/f.png",m:"tour/m.png"} once the AI pictures exist; until then simple placeholder figures are drawn
+const TOUR_DAYS="L X X L X E E X X N X L L E E X X X L L E X N X E L X E".split(" ");   // made-up roster, never real
+const TW={run:0,paused:false,sp:1,W:null,n:0,total:44};
+const twq=id=>document.getElementById(id);
+function twFig(kind){
+  const f=kind==="f",hair=f?"#7b4a2d":"#3b2a20";
+  return '<svg viewBox="0 0 100 230" role="img" aria-label="'+(f?"Female":"Male")+' nurse (placeholder picture)">'
+   +'<ellipse cx="50" cy="224" rx="30" ry="4" fill="rgba(43,37,96,.18)"/>'
+   +'<rect x="33" y="128" width="14" height="82" rx="6" fill="#1d2d6b"/><rect x="53" y="128" width="14" height="82" rx="6" fill="#1d2d6b"/>'
+   +'<ellipse cx="38" cy="214" rx="11" ry="5" fill="#fff"/><ellipse cx="62" cy="214" rx="11" ry="5" fill="#fff"/>'
+   +'<rect x="'+(f?28:25)+'" y="46" width="'+(f?44:50)+'" height="88" rx="16" fill="#27408f"/>'
+   +'<rect x="'+(f?20:15)+'" y="52" width="12" height="62" rx="6" fill="#27408f"/><rect x="'+(f?68:73)+'" y="52" width="12" height="62" rx="6" fill="#27408f"/>'
+   +'<path d="M42 48 q8 36 16 0" fill="none" stroke="#6b7a99" stroke-width="2.5"/>'
+   +'<circle cx="50" cy="28" r="16" fill="#f1c7a5"/>'
+   +(f?'<circle cx="50" cy="9" r="8" fill="'+hair+'"/><path d="M34 26 q16-22 32 0 q-16-8-32 0z" fill="'+hair+'"/>':'<path d="M34 24 q16-20 32 0 q-3-6-16-7 q-13 1-16 7z" fill="'+hair+'"/>')
+   +'<circle cx="44" cy="30" r="1.8" fill="#2b2560"/><circle cx="56" cy="30" r="1.8" fill="#2b2560"/><path d="M44 37 q6 5 12 0" fill="none" stroke="#2b2560" stroke-width="1.6" stroke-linecap="round"/>'
+   +'<rect class="tp" x="'+(f?60:63)+'" y="84" width="15" height="26" rx="3" stroke="#16143a" stroke-width="1.5"/>'
+   +'<text x="50" y="160" text-anchor="middle" font-size="7" fill="#9fb4ff" font-family="system-ui,sans-serif">placeholder</text></svg>';
 }
-function tvConfetti(){
-  const d=document.createElement("div");d.className="tvconf";const cols=["#ffc83d","#8db4ff","#b79cff","#7ee0c0","#ff8fa3"];
-  for(let i=0;i<26;i++){const e=document.createElement("i");e.style.left=((i*37)%100)+"%";e.style.background=cols[i%5];e.style.animationDelay=((i*0.23)%3)+"s";e.style.animationDuration=(2.6+(i%4)*.5)+"s";d.appendChild(e)}
-  return d;
+function twChars(){
+  ["f","m"].forEach(k=>{const el=twq(k==="f"?"twF":"twM");el.innerHTML=TOUR.img[k]?'<img alt="" src="'+TOUR.img[k]+'">':twFig(k);el.className="twch "+k})
 }
-let tvI=0,tvAudio=null,tvMuted=false,tvTimer=0;
-function tourOpen(){tvI=0;$("tour").hidden=false;document.body.style.overflow="hidden";$("tvMute").hidden=!TOUR.audio;tvRender()}
-function tourClose(){$("tour").hidden=true;if(tvAudio){tvAudio.pause();tvAudio=null}clearInterval(tvTimer);if($("setup").hidden&&$("welcome").hidden&&$("rv").hidden)document.body.style.overflow=""}
-function tvRender(){
-  const sc=TV[tvI],st=$("tvStage");st.replaceChildren();
-  const art=document.createElement("div");art.className="tvart";art.innerHTML=sc.art();st.appendChild(art);
-  const gd=document.createElement("div");gd.className="tvguide";const bub=document.createElement("div");bub.className="tvbub";bub.textContent=sc.b||"";bub.hidden=!!(TOUR.audio&&!tvMuted);gd.append(tvAvatar(),bub);st.appendChild(gd);
-  art.querySelectorAll(".tvwk b").forEach(b=>{ // tap-to-try on the "check each week" scene
-    const seq=[["E","#ffc83d"],["L","#8db4ff"],["N","#b79cff"],["X","#e3e8f7"]];b.style.cursor="pointer";b.style.animation="none";
-    b.addEventListener("click",()=>{const i=(seq.findIndex(x=>x[0]===b.textContent.trim())+1)%seq.length;b.textContent=seq[i][0];b.style.background=seq[i][1];b.style.transform="scale(1.12)";setTimeout(()=>{b.style.transform=""},160);const t=art.querySelector(".tvtick");if(t){t.style.transform="scale(1.3)";setTimeout(()=>{t.style.transform=""},200)}})});
-  if(sc.conf)st.appendChild(tvConfetti());$("tvH").textContent=sc.h;$("tvP").textContent=sc.p;
-  const pr=$("tvProg");pr.replaceChildren();TV.forEach((_,i)=>{const b=document.createElement("i");if(i<=tvI)b.className="on";pr.appendChild(b)});
-  $("tvBack").hidden=tvI===0;
-  const last=tvI===TV.length-1,done=!!(lsGet("rosterSetupDone"));
-  $("tvNext").textContent=last?(done?"Done":"✨ Set me up"):"Next";
-  clearInterval(tvTimer);const c=$("tvCount");
-  if(c){let v=0;tvTimer=setInterval(()=>{v=(v+97)%2900;c.textContent="$"+(v+1900).toLocaleString("en-AU")},60)}
-  if(tvAudio){tvAudio.pause();tvAudio=null}
-  if(TOUR.audio&&!tvMuted){try{tvAudio=new Audio(TOUR.dir+"scene"+(tvI+1)+".m4a");tvAudio.play().catch(()=>{})}catch(e){}}
+function twWait(ms,id){return new Promise((res,rej)=>{let left=ms/TW.sp,last=Date.now();const tick=()=>{if(id!==TW.run)return rej("stop");const n=Date.now();if(!TW.paused)left-=n-last;last=n;if(left<=0)res();else setTimeout(tick,40)};tick()})}
+function twFit(){const w=twq("twPhWrap"),h=w.clientHeight-14,wd=w.clientWidth-30,k=Math.max(.2,Math.min(h/(844+14),wd/(390+14)));twq("twScr").style.transform="scale("+k+")";const p=twq("twPh");p.style.width=(390*k+14)+"px";p.style.height=(844*k+14)+"px"}
+async function twSay(id,who,text,min){
+  const c=twq("twCap");c.className="twcap "+who;c.replaceChildren();const sp=document.createElement("span");sp.textContent=text;c.appendChild(sp);
+  twq("twF").classList.toggle("sp",who==="f");twq("twM").classList.toggle("sp",who==="m");
+  TW.n++;twq("twBar").style.width=Math.min(100,TW.n/TW.total*100)+"%";
+  await twWait(Math.max(min||1700,text.length*55+800),id);
+  twq("twF").classList.remove("sp");twq("twM").classList.remove("sp");
 }
-$("tvX").addEventListener("click",tourClose);
-$("tvBack").addEventListener("click",()=>{if(tvI>0){tvI--;tvRender()}});
-$("tvNext").addEventListener("click",()=>{
-  if(tvI<TV.length-1){tvI++;tvRender();return}
-  const done=!!lsGet("rosterSetupDone");tourClose();
-  if(!done){entered=true;flow();wzOpen()}else{entered=true;flow()}
-});
-$("tvMute").addEventListener("click",()=>{tvMuted=!tvMuted;$("tvMute").textContent=tvMuted?"🔇":"🔊";if(tvMuted&&tvAudio){tvAudio.pause();tvAudio=null}else if(!tvMuted)tvRender()});
+async function twTap(id,sel,who,real){
+  const W=TW.W;if(!W)return;let el=typeof sel==="string"?W.document.querySelector(sel):sel;
+  if(!el||!el.getClientRects().length){await twWait(300,id);return}
+  try{el.scrollIntoView({block:"center"})}catch(e){}
+  await twWait(150,id);
+  const r=el.getBoundingClientRect(),ring=twq("twRing");
+  ring.style.left=(r.left+r.width/2)+"px";ring.style.top=(r.top+r.height/2)+"px";ring.classList.remove("go");void ring.offsetWidth;ring.classList.add("go");
+  const ch=twq(who==="f"?"twF":"twM");ch.classList.add("tap");setTimeout(()=>ch.classList.remove("tap"),450);
+  el.style.transition="transform .12s,filter .12s";el.style.transform="scale(.95)";el.style.filter="brightness(.88)";
+  await twWait(280,id);el.style.transform="";el.style.filter="";
+  if(real){try{el.click()}catch(e){}await twWait(250,id)}
+}
+const twEv=(code)=>{try{return TW.W.eval(code)}catch(e){return null}};
+function twBoss(show){
+  const b=twq("twBoss");b.hidden=!show;if(!show)return;
+  const cells=["M","T","W","T","F","S","S"].map(d=>'<b class="h">'+d+'</b>').join("")+TOUR_DAYS.map(c=>'<b>'+c+'</b>').join("");
+  b.innerHTML='<h3>My roster</h3><small>Example roster for the tour</small><div class="g">'+cells+'</div>';
+}
+async function twFlash(id){const f=twq("twFlash");f.classList.remove("go");void f.offsetWidth;f.classList.add("go");await twWait(550,id)}
+async function twDemoInit(id){
+  const f=twq("twDemo");
+  await new Promise(res=>{f.onload=res;f.src=location.href.split("#")[0]});
+  const W=f.contentWindow;TW.W=W;
+  for(let i=0;i<80&&!W.__rhReady;i++)await twWait(100,id);
+  twEv('entered=true;flow();gcApi=async()=>({items:[]});msApi=async()=>({value:[]});days=[];ocrDraft=[];');
+  W.location.hash="#roster";
+  await twWait(300,id);
+}
+async function twStory(id){
+  const F="f",M="m",say=(w,t,m)=>twSay(id,w,t,m),tap=(s,w,r)=>twTap(id,s,w,r),w=ms=>twWait(ms,id);
+  twChars();twBoss(false);twq("twEnd").hidden=true;twq("twBar").style.width="0";TW.n=0;
+  await twDemoInit(id);twFit();
+  const Wn=()=>TW.W;
+  // 1 walk in
+  twq("twF").classList.add("in");await w(1200);
+  await say(F,"Looks like the new roster is out.");
+  await say(M,"Ugh. Here we go again.");
+  await say(F,"Not this time. Watch this.");
+  // 2 calendar first
+  twEv('wzOpen()');await w(500);
+  await say(F,"Step one, connect your calendar. It makes its own Work roster calendar, so your shifts never get mixed up with your life.",2600);
+  await tap("#wzGcal",M);twEv('GC.cals=[{id:"primary",primary:true,accessRole:"owner",summary:"Calendar"}];wzCalMsg();');await w(500);
+  await say(M,"And that works with Google, Outlook, Apple?");
+  await say(F,"All three. And it checks for clashes, so no more double-booking.");
+  await tap("#wzNext",M,1);twEv('GC.cals=[];');
+  // 3 pay point, salary sacrifice
+  await say(F,"Step two, tell it your pay point. That's how it works out your pay.");
+  twEv('var o=$("su_pp").options;if(o.length>4)$("su_pp").value=o[4].value;');await tap("#su_pp",M);
+  await tap("#wzNext",M,1);
+  await say(F,"Then your salary sacrifice and pre-tax deductions, so the take-home is closer to the real thing.",2400);
+  await tap("#su_yes",M,1);
+  await say(M,"I'll add my meals and entertainment.");
+  await tap('#suChips [data-t="meals"]',M,1);twEv('[...document.querySelectorAll("#suList .su_a")].forEach(e=>{if(!(+e.value>0))e.value="40"})');
+  await say(F,"And I've got my car lease in there.");
+  await tap('#suChips [data-t="car"]',F,1);twEv('[...document.querySelectorAll("#suList .su_a")].forEach(e=>{if(!(+e.value>0))e.value="310"})');
+  await say(M,"Done. That was quick.");
+  await tap("#wzNext",M,1);
+  // 4 screenshot
+  await say(F,"Now, open BOSS and screenshot your roster.");
+  twBoss(true);await w(900);await twFlash(id);
+  await say(F,"Back in Roster Hero, pick the screenshot. It reads the whole thing for you.",2300);
+  twBoss(false);await tap("#wzShot",F);
+  twEv('suApply&&0;closeSetup();');twEv('location.hash="#roster";');await w(500);
+  twEv('$("ocrStatus").textContent="Reading your screenshot…";');await w(900);
+  twEv('days='+JSON.stringify(TOUR_DAYS.map((c,i)=>c))+'.map((c,i)=>({date:new Date(2026,10,16+i),code:c}));ocrDraft=days.map(x=>({date:x.date,code:x.code}));$("chk").hidden=false;draw();$("ocrStatus").textContent="Screenshot read. Please check the results carefully before saving.";');
+  await say(M,"No typing at all?");
+  await say(F,"None. And it reads it on your phone, so your roster goes nowhere.");
+  // shift times
+  twEv('var b=$("stBox");b.open=true;');await w(300);twEv('$("stBox").scrollIntoView({block:"start"})');
+  await say(F,"Then check your shift times match your roster. Nights are the one to look at.");
+  // 5 check each week
+  twEv('rvOpen(0)');await w(500);
+  await say(M,"Why check it? Doesn't it just get it right?");
+  await say(F,"Nearly always, but it can misread a code, and this is where you catch it. It's your roster, so you get the final say.",2800);
+  await tap(".rvbody .codebtn",M,1);
+  await say(M,"Fair enough.");
+  await say(F,"Tap a day to change it. When the week looks right, move on.");
+  for(let i=0;i<5;i++){await tap("#rvNext",M,1);await w(450)}
+  // 6 into calendar
+  twEv('rvClose();location.hash="#roster";$("gcConn").hidden=false;$("gcAdd").hidden=false;scrollTo(0,0);');await w(400);
+  await say(F,"One tap and every shift and day off goes into your Work roster calendar.",2300);
+  twEv('btnState($("gcAdd"),"work","Adding to Google Calendar…")');await tap("#gcAdd",F);await w(1200);
+  twEv('btnState($("gcAdd"),"ok","Added to Google Calendar")');
+  await say(M,"My whole month, sorted.");
+  // 7 pay
+  twEv('location.hash="#pay";pay();scrollTo(0,0);');await w(600);
+  await say(F,"Then the Pay tab. Penalties, public holidays, overtime, all in there.");
+  await say(M,"Wow. So I'll know what's coming before payday.");
+  await say(F,"A good estimate. It's not payroll, but it's close enough to plan with.");
+  // 8 swap
+  twEv('location.hash="#swaps";buildSwap();scrollTo(0,0);');await w(600);
+  await say(M,"Hey, can you swap shifts with me on the 20th?");
+  await say(F,"Let me check. Sure, that works for me.",1900);
+  twEv('$("sd0").value="4";$("sc0").value="E";swapCalc();');await w(900);
+  await say(F,"And the test shows pay, rules and clashes before you say yes. No guessing.",2300);
+  twEv('$("swapply").hidden=false;');
+  twEv('btnState($("swapply"),"work","Updating calendar…")');await tap("#swapply",M);await w(1200);
+  twEv('btnState($("swapply"),"ok","Saved · calendar updated")');await w(600);
+  // 9 close
+  twEv('location.hash="#roster";');
+  twq("twM").classList.add("ex");
+  await say(M,"This is so much simpler than what I've been doing.");
+  await say(F,"And the setup is a one-off. Next month it's just screenshot, check, add.");
+  twq("twM").classList.remove("ex");
+  await say(M,"What about the pay? Is that official?");
+  await say(F,"It's an estimate, not payroll, and Roster Hero isn't made by or connected with SA Health or BOSS. It's just here to save you the maths.",3200);
+  await say(F,"Getting started is easy. Follow the setup wizard once, then you're good to go.",2500);
+  twq("twBar").style.width="100%";twq("twEnd").hidden=false;
+}
+function twStart(){TW.run++;TW.paused=false;twq("twPause").innerHTML="&#10074;&#10074;";twq("twF").classList.remove("in");const id=TW.run;twStory(id).catch(e=>{if(e!=="stop")console.error(e)})}
+function tourOpen(){$("tour").hidden=false;document.body.style.overflow="hidden";twChars();twFit();twStart()}
+function tourClose(){TW.run++;$("tour").hidden=true;twq("twDemo").removeAttribute("src");TW.W=null;if($("setup").hidden&&$("welcome").hidden&&$("rv").hidden)document.body.style.overflow=""}
+$("twX").addEventListener("click",tourClose);
+$("twPause").addEventListener("click",()=>{TW.paused=!TW.paused;$("twPause").innerHTML=TW.paused?"&#9654;":"&#10074;&#10074;"});
+$("twAgain").addEventListener("click",twStart);
+$("twWiz").addEventListener("click",()=>{tourClose();entered=true;flow();wzOpen()});
+$("twSolo").addEventListener("click",()=>{tourClose();lsSet("rosterSkip","1");entered=true;flow()});
+addEventListener("resize",()=>{if(!$("tour").hidden)twFit()});
 addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("tour").hidden)tourClose()});
+
 
 var entered=false;
 /* ---------- First run: welcome and terms, try it free, unlock, set up ---------- */
