@@ -1167,7 +1167,23 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.6",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+/* Start-up safety net (1.6.7): if the app fails to start, show what went wrong instead of a blank screen. */
+(function(){var errs=[];
+window.addEventListener("error",function(e){errs.push((e.message||"error")+(e.lineno?" (line "+e.lineno+")":""))});
+window.addEventListener("unhandledrejection",function(e){errs.push("promise: "+((e.reason&&e.reason.message)||e.reason))});
+window.addEventListener("load",function(){setTimeout(function(){
+  if(window.__rhReady)return;
+  var t="Roster Hero 1.6.7 did not start. "+(errs.length?errs.slice(0,4).join(" | "):"No error was reported.")+" | "+(navigator.userAgent||"");
+  var d=document.createElement("div");d.style.cssText="position:fixed;inset:0;z-index:99999;background:#eaf4ff;padding:24px;overflow:auto;font:16px system-ui,sans-serif;color:#1b1b4b";
+  d.innerHTML='<h2 style="margin:40px 0 8px">Roster Hero didn\u2019t start properly</h2><p>Your roster and settings have not been deleted. Please tap <b>Copy details</b>, then send them to support.</p><p style="font-size:13px;word-break:break-word;background:#fff;border-radius:12px;padding:12px"></p><button id="rhA" style="width:100%;padding:16px;margin:8px 0;border:0;border-radius:999px;background:#3b49df;color:#fff;font-size:17px;font-weight:700">Try again</button><button id="rhB" style="width:100%;padding:16px;margin:8px 0;border:2px solid #c9d3f5;border-radius:999px;background:#fff;color:#3b49df;font-size:17px;font-weight:700">Copy details</button>';
+  d.querySelector("p+p").textContent=t;document.body.appendChild(d);
+  document.getElementById("rhA").onclick=function(){location.reload()};
+  document.getElementById("rhB").onclick=function(){var b=this;try{navigator.clipboard.writeText(t).then(function(){b.textContent="Copied"},function(){b.textContent="Select the text above and copy it"})}catch(e){b.textContent="Select the text above and copy it"}};
+},3000)});
+})();
+</script>
+<script>
+const APP_CONFIG={name:"Roster Hero",version:"1.6.7",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -4044,6 +4060,7 @@ showResume();
 
 /* Quick actions show what they did on the button itself. */
 [["dl","Preparing spreadsheet…","Spreadsheet saved"],["bkSave","Preparing backup…","Backup downloaded"],["icsGo","Preparing file…","Calendar file ready"],["icsAdd","Preparing file…","Calendar file ready"],["addShift","Saving…","Day saved"],["rpCopy","Copying…","Details copied"],["hrCopy","Copying…","Link copied"]].forEach(([id,w,d])=>{const b=$(id);if(b)b.addEventListener("click",()=>flashBtn(id,w,d))});
+window.__rhReady=1;
 </script>
 </body>
 </html>
