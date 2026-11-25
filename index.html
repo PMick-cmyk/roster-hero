@@ -1167,7 +1167,7 @@ button.bad{background:#c43d4b!important;color:#fff!important;border-color:#c43d4
 <nav class="tabbar" aria-label="Pages"><a href="#roster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>Roster</span></a><a href="#pay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 12h.01M18 12h.01"/></svg><span>Pay</span></a><a href="#swaps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg><span>Swap</span></a><a href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Setup</span></a></nav>
 
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.6.4",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.6.6",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -1774,8 +1774,7 @@ restore();
     }
   }catch(e){}
 })();
-window.heldDays=null;
-try{if(days.length&&!sessionStorage.getItem("heroSess")){window.heldDays=days;days=[]}}catch(e){}
+window.heldDays=null; // the saved roster now always comes back when you reopen the app
 if(days.length){$("chk").hidden=false;draw();status("Restored your locally saved roster.");}else renderHistory();
 
 // OCR is loaded only when a screenshot is selected, so the planner itself opens quickly.
@@ -2505,10 +2504,22 @@ function showOCRRows(){
   });
   $("applyOCR").hidden=false;if(window.rvSync)rvSync();
 }
+/* Keeps a small copy of your screenshot on this phone only, so it is still there next time. */
+function saveShot(file){
+  const im=new Image(),u=URL.createObjectURL(file);
+  im.onload=()=>{try{
+    const m=Math.max(im.naturalWidth,im.naturalHeight),k=Math.min(1,1400/m),c=document.createElement("canvas");
+    c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+    c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+    lsSet("rosterShotImg",c.toDataURL("image/jpeg",0.75));
+  }catch(e){try{localStorage.removeItem("rosterShotImg")}catch(_){}}URL.revokeObjectURL(u)};
+  im.onerror=()=>URL.revokeObjectURL(u);im.src=u;
+}
+function forgetShot(){try{localStorage.removeItem("rosterShotImg")}catch(e){}}
 $("file").addEventListener("change",async e=>{
   const file=e.target.files?.[0];if(!file)return;
   if(!file.type.startsWith("image/")){ $("ocrStatus").textContent="Please choose an image file.";return; }
-  const preview=$("ocrPreview");preview.src=URL.createObjectURL(file);preview.style.display="block";$("clearShot").hidden=false;
+  const preview=$("ocrPreview");preview.src=URL.createObjectURL(file);preview.style.display="block";$("clearShot").hidden=false;saveShot(file);
   $("ocrResults").replaceChildren();$("applyOCR").hidden=true;ocrDraft=[];ocrWarn="";ocrShot=null;
   $("ocrStatus").textContent="Starting screenshot reader…";$("scanReport").hidden=true;
   lastScan={when:new Date().toISOString(),type:file.type||"?",kb:Math.round(file.size/1024),path:"",days:0,error:"",diag:null};
@@ -2586,7 +2597,7 @@ $("bxGo").addEventListener("click",async()=>{
   finally{$("scanReport").hidden=false}
 });
 $("clearShot").addEventListener("click",()=>{
-  const p=$("ocrPreview");if(p.src)URL.revokeObjectURL(p.src);
+  const p=$("ocrPreview");if(p.src&&p.src.startsWith("blob:"))URL.revokeObjectURL(p.src);forgetShot();
   p.removeAttribute("src");p.style.display="none";
   $("file").value="";$("ocrResults").replaceChildren();$("applyOCR").hidden=true;$("clearShot").hidden=true;$("scanReport").hidden=true;
   ocrDraft=[];ocrWarn="";ocrShot=null;bxLast=null;$("bxOpen").hidden=true;$("ocrStatus").textContent="No screenshot selected.";rvBtn();
@@ -2802,14 +2813,15 @@ async function gcTidyScan(){
 async function gcTidy(auto){
   try{
     if(!GC.workId){gcMsg("Create your Work roster calendar first.");return}
-    gcMsg("Looking for old roster events…");
+    gcMsg("Looking for old roster events…");btnState($("gcTidy"),"work","Looking for old events…");
     const found=await gcTidyScan(),n=found.reduce((a,f)=>a+f.evs.length,0);
-    if(!n){gcMsg(auto?"Connected to Google Calendar.":"No old roster events found in your other calendars.");return}
-    if(!(await tidyAsk(n,found.map(f=>f.name).join(", ")))){gcMsg("OK. Old events left where they are.");return}
+    if(!n){gcMsg(auto?"Connected to Google Calendar.":"No old roster events found in your other calendars.");btnState($("gcTidy"),auto?"":"ok","Nothing to remove");return}
+    if(!(await tidyAsk(n,found.map(f=>f.name).join(", ")))){gcMsg("OK. Old events left where they are.");btnState($("gcTidy"),"");return}
+    btnState($("gcTidy"),"work","Removing old events…");
     let del=0;
     for(const f of found)for(const id of f.evs){try{await gcApi("/calendars/"+encodeURIComponent(f.id)+"/events/"+encodeURIComponent(id),{method:"DELETE"});del++}catch(e){if(e.status!==404&&e.status!==410)throw e}}
-    gcMsg("Removed "+del+" old event"+(del===1?"":"s")+". Your Work roster calendar is untouched.");
-  }catch(err){gcMsg("Couldn’t tidy up: "+(err.message||err))}
+    gcMsg("Removed "+del+" old event"+(del===1?"":"s")+". Your Work roster calendar is untouched.");btnState($("gcTidy"),"ok","Removed "+del+" old event"+(del===1?"":"s"));
+  }catch(err){gcMsg("Couldn’t tidy up: "+(err.message||err));btnState($("gcTidy"),"bad")}
 }
 async function gcFindWork(){
   let wid=lsGet("rosterWorkCalG");
@@ -2922,6 +2934,13 @@ function btnState(b,state,txt){
   else{b.textContent=b._o;return}
   b._t=setTimeout(()=>{b.classList.remove("ok","bad");b.textContent=b._o},5000);
 }
+function flashBtn(id,working,done,ms){const b=$(id);if(!b)return;btnState(b,"work",working);setTimeout(()=>btnState(b,"ok",done),ms||700)}
+async function runBtn(id,working,fn,done){ // shows what the button is doing, then that it finished
+  const b=$(id);if(!b)return fn();
+  btnState(b,"work",working);
+  try{const r=await fn();if(r===false)btnState(b,"");else btnState(b,"ok",typeof r==="string"?r:done)}
+  catch(e){btnState(b,"bad");throw e}
+}
 async function gcSync(opt){const SB=(opt&&opt.btn)||$("gcSync");
   if(!days.length){gcMsg("Save a roster first.");return}
   const items=shifts();if(!items.length){gcMsg("There are no shifts to add.");return}
@@ -2944,11 +2963,11 @@ async function gcSync(opt){const SB=(opt&&opt.btn)||$("gcSync");
     gcMsg(msg);status(msg);btnState(SB,"ok",(opt&&opt.done)||("Done · "+(add+upd)+" saved"));return true;
   }catch(err){gcMsg("Couldn’t update your calendar: "+(err.message||err));btnState(SB,"bad");return false}
 }
-$("gcConnect").addEventListener("click",gcConnect);
-$("wcMake").addEventListener("click",()=>gcWorkSetup(true));
+$("gcConnect").addEventListener("click",()=>runBtn("gcConnect","Connecting to Google…",async()=>{await gcConnect();return GC.cals.length?"Connected":false}));
+$("wcMake").addEventListener("click",()=>runBtn("wcMake","Creating calendar…",async()=>{await gcWorkSetup(true);return GC.workId?"Work roster created":false}));
 $("gcTidy").addEventListener("click",()=>gcTidy(false));
 $("gcSync").addEventListener("click",()=>gcSync());
-$("gcRefresh").addEventListener("click",()=>gcLoadEvents().catch(e=>gcMsg(e.message)));
+$("gcRefresh").addEventListener("click",()=>runBtn("gcRefresh","Reloading events…",()=>gcLoadEvents().then(()=>"Events reloaded"),"Events reloaded").catch(e=>gcMsg(e.message)));
 $("gcOut").addEventListener("click",()=>{
   try{if(GC.token&&window.google&&google.accounts)google.accounts.oauth2.revoke(GC.token,()=>{})}catch(e){}
   GC.token=null;GC.client=null;GC.cals=[];calEvents=[];lsSet("rosterGcOn","");$("gcConn").hidden=true;$("gcConnect").hidden=false;$("calst").textContent="No calendar loaded yet.";gcMsg("Disconnected.");if(days.length)swapCalc();
@@ -2957,7 +2976,7 @@ $("offNote").checked=offOn();
 $("offNote").addEventListener("change",()=>{try{localStorage.setItem("rosterOffNotes",$("offNote").checked?"1":"0")}catch(e){}});
 if(lsGet("rosterGcOn")){$("gcConnect").textContent="Reconnect Google Calendar";gcMsg("Your Google link needs a quick refresh. Tap Reconnect.")}
 $("gcAdd").addEventListener("click",()=>{
-  if(GC.cals.length)gcSync();
+  if(GC.cals.length)gcSync({btn:$("gcAdd"),working:"Adding to Google Calendar…",done:"Added to Google Calendar"});
   else if(lsGet("rosterGcOn")&&$("gcClient").value.trim()){gcConnect().then(()=>{if(GC.cals.length)gcSync()})}
   else{gcMsg("Connect Google Calendar first, then add your shifts.");go("calendar")}
 });
@@ -3030,7 +3049,7 @@ async function msTidy(){
   try{
     const w=MS.cals.find(c=>c.id===lsGet("rosterWorkCalM")||c.name===WORK_NAME);
     if(!w){msMsg("Create your Work roster calendar first.");return}
-    msMsg("Looking for old roster events…");
+    msMsg("Looking for old roster events…");btnState($("msTidy"),"work","Looking for old events…");
     const found=[];
     for(const c of MS.cals){
       if(c.id===w.id)continue;
@@ -3039,12 +3058,13 @@ async function msTidy(){
       if(ids.length)found.push({id:c.id,name:c.name,ids});
     }
     const n=found.reduce((a,f)=>a+f.ids.length,0);
-    if(!n){msMsg("No old roster events found in your other calendars.");return}
-    if(!(await tidyAsk(n,found.map(f=>f.name).join(", ")))){msMsg("OK. Old events left where they are.");return}
+    if(!n){msMsg("No old roster events found in your other calendars.");btnState($("msTidy"),"ok","Nothing to remove");return}
+    if(!(await tidyAsk(n,found.map(f=>f.name).join(", ")))){msMsg("OK. Old events left where they are.");btnState($("msTidy"),"");return}
+    btnState($("msTidy"),"work","Removing old events…");
     let del=0;
     for(const f of found)for(const id of f.ids){try{await msApi("/me/events/"+encodeURIComponent(id),{method:"DELETE"});del++}catch(e){if(e.status!==404)throw e}}
-    msMsg("Removed "+del+" old event"+(del===1?"":"s")+". Your Work roster calendar is untouched.");
-  }catch(err){msMsg("Couldn’t tidy up: "+(err.message||err))}
+    msMsg("Removed "+del+" old event"+(del===1?"":"s")+". Your Work roster calendar is untouched.");btnState($("msTidy"),"ok","Removed "+del+" old event"+(del===1?"":"s"));
+  }catch(err){msMsg("Couldn’t tidy up: "+(err.message||err));btnState($("msTidy"),"bad")}
 }
 async function msWorkSetup(manual){
   let created=false;
@@ -3109,7 +3129,7 @@ async function msSync(opt){const SB=(opt&&opt.btn)||$("msSync");
     msMsg(msg);status(msg);btnState(SB,"ok",(opt&&opt.done)||"Done");return true;
   }catch(err){msMsg("Couldn’t update Outlook: "+(err.message||err));btnState(SB,"bad");return false}
 }
-$("msConnect").addEventListener("click",msConnect);
+$("msConnect").addEventListener("click",()=>runBtn("msConnect","Connecting to Outlook…",async()=>{await msConnect();return MS.cals&&MS.cals.length?"Connected":false}));
 $("msSync").addEventListener("click",()=>msSync());
 $("msTidy").addEventListener("click",msTidy);
 $("msOut").addEventListener("click",msDisconnect);
@@ -3991,9 +4011,11 @@ function syncPrev(){const src=$("ocrPreview").getAttribute("src")||"",im=$("prev
 $("prev").addEventListener("error",()=>{$("prevFig").hidden=true});
 $("file").addEventListener("change",()=>{window.heldDays=null;showResume();setTimeout(syncPrev,0)});
 $("clearShot").addEventListener("click",()=>setTimeout(syncPrev,0));
+(function(){try{const sh=lsGet("rosterShotImg");if(sh&&days.length){const p=$("ocrPreview");p.src=sh;p.style.display="block";$("clearShot").hidden=false;$("ocrStatus").textContent="Your saved screenshot is shown below.";}}catch(e){}})();
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 syncPrev();
 $("msAdd").addEventListener("click",()=>{
-  if(window.MS&&MS.cals&&MS.cals.length&&$("msTarget").value)msSync();
+  if(window.MS&&MS.cals&&MS.cals.length&&$("msTarget").value)msSync({btn:$("msAdd"),working:"Adding to Outlook…",done:"Added to Outlook"});
   else{msMsg("Connect Outlook first, then add your shifts.");go("calendar")}
 });
 $("icsAdd").addEventListener("click",()=>$("icsGo").click());
@@ -4007,7 +4029,7 @@ function showResume(){
 function clearRoster(){
   days=[];window.heldDays=null;window._pend=null;
   $("chk").hidden=true;$("gen").removeAttribute("src");
-  try{sessionStorage.removeItem("heroSess")}catch(e){}
+  try{sessionStorage.removeItem("heroSess")}catch(e){}forgetShot();
   xClearEvents();showResume();persist();pay();swapCalc();status("Roster and pay estimate cleared.");
 }
 $("resumeOpen").addEventListener("click",()=>{
@@ -4019,6 +4041,9 @@ $("resumeDel").addEventListener("click",()=>{window.heldDays=null;showResume();p
 $("clearShot").addEventListener("click",clearRoster);
 $("clearRoster").addEventListener("click",()=>{clearRoster();$("ocrPreview").getAttribute("src")&&$("clearShot").click()});
 showResume();
+
+/* Quick actions show what they did on the button itself. */
+[["dl","Preparing spreadsheet…","Spreadsheet saved"],["bkSave","Preparing backup…","Backup downloaded"],["icsGo","Preparing file…","Calendar file ready"],["icsAdd","Preparing file…","Calendar file ready"],["addShift","Saving…","Day saved"],["rpCopy","Copying…","Details copied"],["hrCopy","Copying…","Link copied"]].forEach(([id,w,d])=>{const b=$(id);if(b)b.addEventListener("click",()=>flashBtn(id,w,d))});
 </script>
 </body>
 </html>
