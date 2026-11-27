@@ -1226,7 +1226,7 @@ window.addEventListener("load",function(){setTimeout(function(){
 })();
 </script>
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.7.2",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.7.3",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -1953,7 +1953,7 @@ function bandsFromInk(ink,w,h){
       const d=gp[k];let ref=m0;
       const nb=gp.slice(k+1,k+5).filter(v=>m0&&Math.abs(v-m0)<=m0*0.2).sort((p,q)=>p-q);if(nb.length)ref=nb[Math.floor(nb.length/2)];
       const n2=ref?Math.round(d/ref):1;
-      if(n2>=2&&n2<=4&&Math.abs(d-n2*ref)<=n2*ref*0.1){for(let q=1;q<n2;q++)xs.push(Math.round(xs0[k]+d*q/n2))}
+      if(n2>=2&&n2<=4&&Math.abs(d-n2*ref)<=n2*ref*(k<xs0.length-2?0.1:0.04)){for(let q=1;q<n2;q++)xs.push(Math.round(xs0[k]+d*q/n2))}
       xs.push(xs0[k+1]);
     }
     for(let k=0;k<xs.length-1;k++)cells.push({a:xs[k],b:xs[k+1]});
