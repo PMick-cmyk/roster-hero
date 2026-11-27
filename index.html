@@ -1226,7 +1226,7 @@ window.addEventListener("load",function(){setTimeout(function(){
 })();
 </script>
 <script>
-const APP_CONFIG={name:"Roster Hero",version:"1.7.3",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
+const APP_CONFIG={name:"Roster Hero",version:"1.7.4",preview:true,ratesUpdated:"19 November 2026",supportEmail:"pekinmichael@gmail.com",businessName:"Roster Hero",abn:"36 119 705 048"}; // setup_roster.py fills these in
 const SHIFTS={E:{name:"Early",s:"07:00",e:"15:30"},L:{name:"Late",s:"13:00",e:"21:30"},N:{name:"Night",s:"21:00",e:"07:30"},N2:{name:"Night",s:"21:00",e:"07:30"}};
 const ORDER=["E","L","N","N2","X","A"];
 const COL={E:["#ffc83d","#2a1c00"],L:["#8db4ff","#0b1d4d"],N:["#b79cff","#25104f"],N2:["#b79cff","#25104f"],X:["#e3e8f7","#3a4570"],A:["#7ee0c0","#08382b"]};
@@ -2389,6 +2389,10 @@ async function readRosterGrid(file,worker,T,opts){
     return out.length?out:null;
   }
   async function readGridBody(){
+    { // a dark screen edge or shadow just past the table can look like a few extra empty cells: if the dates say the table holds N days and a row has a few more, cut the extras off the right-hand end
+      const sp0=spanOf();
+      if(sp0>=7)bands.forEach(b=>{const ex=b.cells.length-sp0;if(ex>=1&&ex<=4)b.cells=b.cells.slice(0,sp0)});
+    }
     gridResult=await readGridBands(bands);
     if(opts&&opts.box)return;
     if(!gridOK(gridResult)){
@@ -2416,6 +2420,11 @@ async function readRosterGrid(file,worker,T,opts){
     await readRange(0,firstN);
     if(total>=6&&codes.filter(x=>x!=="?").length<3)return null; // not the shift row
     if(total>firstN)await readRange(firstN,total);
+    try{ // a one-letter answer for a cell whose writing is much wider than the other one-letter cells (LR read as L, PH as N): mark it unsure so it gets a second look
+      const asp=codes.map((c,i)=>{if(c==="?")return 0;const k=b.cells[i],bx=inkBox(cropScaled(src,k.a+4,b.y1+4,Math.max(4,k.b-k.a-7),Math.max(4,b.y2-b.y1-7),2,0),true);return bx?bx.w/bx.h:0});
+      const one=asp.filter((a,i)=>a>0&&codes[i].length===1).sort((p,q)=>p-q);
+      if(one.length>=3){const m=one[one.length>>1];codes.forEach((c,i)=>{if(c.length===1&&asp[i]>m*1.5)unsure[i]=true})}
+    }catch(e){console.warn("Width check skipped",e)}
     const unk={};
     if(b.printout&&codes.length===b.cells.length){ // second opinion from the printed times
       try{
